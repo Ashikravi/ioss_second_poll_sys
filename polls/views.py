@@ -14,16 +14,22 @@ def register_view(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
+            login(request, user)  # Automatically log in the new user
             messages.success(request, 'Registration successful!')
             return redirect('poll_list')
+        else:
+            # Form has errors  they'll be displayed in template
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = UserCreationForm()
+    
     return render(request, 'registration/register.html', {'form': form})
 
+#Home page shows active polls to the registered users
 def poll_list(request):
     polls = Poll.objects.filter(is_active=True).order_by('-created_at')
     return render(request, 'polls/poll_list.html', {'polls': polls})
+
 
 def poll_detail(request, poll_id):
     poll = get_object_or_404(Poll, id=poll_id, is_active=True)
@@ -31,7 +37,7 @@ def poll_detail(request, poll_id):
     # Check if poll is expired
     if poll.is_expired():
         messages.error(request, 'This poll has expired.')
-        return redirect('poll_results', poll_id=poll.id)
+        return redirect('poll_results', poll_id=poll.id) #type=ignore (a Pylance warning VS Code's Python language server - it's not an actual error)
     
     user_voted = False
     if request.user.is_authenticated:
@@ -48,7 +54,7 @@ def vote(request, poll_id):
     
     if poll.is_expired():
         messages.error(request, 'This poll has expired.')
-        return redirect('poll_results', poll_id=poll.id)
+        return redirect('poll_results', poll_id=poll.id)#type=ignore 
     
     if request.method == 'POST':
         choice_id = request.POST.get('choice')
@@ -57,7 +63,7 @@ def vote(request, poll_id):
                 choice = Choice.objects.get(id=choice_id, poll=poll)
                 Vote.objects.create(user=request.user, choice=choice, poll=poll)
                 messages.success(request, 'Your vote has been recorded!')
-                return redirect('poll_results', poll_id=poll.id)
+                return redirect('poll_results', poll_id=poll.id)#type=ignore 
             except Choice.DoesNotExist:
                 messages.error(request, 'Invalid choice.')
             except IntegrityError:
@@ -65,13 +71,13 @@ def vote(request, poll_id):
         else:
             messages.error(request, 'Please select a choice.')
     
-    return redirect('poll_detail', poll_id=poll.id)
+    return redirect('poll_detail', poll_id=poll.id)#type=ignore 
 
 def poll_results(request, poll_id):
     poll = get_object_or_404(Poll, id=poll_id)
     choices_data = []
     
-    for choice in poll.choices.all():
+    for choice in poll.choices.all():#type=ignore 
         choices_data.append({
             'text': choice.text,
             'votes': choice.vote_count(),
@@ -87,13 +93,22 @@ def poll_results(request, poll_id):
 def poll_results_json(request, poll_id):
     poll = get_object_or_404(Poll, id=poll_id)
     data = {
-        'labels': [choice.text for choice in poll.choices.all()],
-        'votes': [choice.vote_count() for choice in poll.choices.all()],
-        'percentages': [choice.vote_percentage() for choice in poll.choices.all()]
+        'labels': [choice.text for choice in poll.choices.all()],#type=ignore 
+        'votes': [choice.vote_count() for choice in poll.choices.all()],#type=ignore 
+        'percentages': [choice.vote_percentage() for choice in poll.choices.all()]#type=ignore 
     }
     return JsonResponse(data)
 
-# Bonus Features
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+from django.contrib import messages
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'You have been successfully logged out.')
+    return redirect('poll_list')
+
+
 @login_required
 def my_votes(request):
     votes = Vote.objects.filter(user=request.user).select_related('choice__poll').order_by('-voted_at')
@@ -108,7 +123,7 @@ def export_results_csv(request, poll_id):
     writer = csv.writer(response)
     writer.writerow(['Choice', 'Votes', 'Percentage'])
     
-    for choice in poll.choices.all():
+    for choice in poll.choices.all():  #type=ignore 
         writer.writerow([choice.text, choice.vote_count(), f"{choice.vote_percentage()}%"])
     
     return response

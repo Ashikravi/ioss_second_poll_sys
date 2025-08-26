@@ -6,7 +6,7 @@ from datetime import timedelta
 class Poll(models.Model):
     question = models.CharField(max_length=200)
     created_at = models.DateTimeField(default=timezone.now)
-    expires_at = models.DateTimeField(null=True, blank=True)  # Bonus feature
+    expires_at = models.DateTimeField(null=True, blank=True)  # poll expiretime
     is_active = models.BooleanField(default=True)
     
     def __str__(self):
@@ -28,7 +28,7 @@ class Choice(models.Model):
         return self.text
     
     def vote_count(self):
-        return self.votes.count()
+        return self.votes.count() #type=ignore 
     
     def vote_percentage(self):
         total = self.poll.total_votes()
@@ -39,11 +39,11 @@ class Choice(models.Model):
 class Vote(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE, related_name='votes')
-    poll = models.ForeignKey(Poll, on_delete=models.CASCADE)  # Add direct reference to poll
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE)  #  direct reference to poll
     voted_at = models.DateTimeField(default=timezone.now)
     
     class Meta:
-        unique_together = ('user', 'poll')  # One vote per user per poll
+        unique_together = ('user', 'poll')  # One vote per user per poll "database constrain"
     
     def save(self, *args, **kwargs):
         # Automatically set poll from choice
