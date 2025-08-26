@@ -1,0 +1,46 @@
+<!-- templates/polls/poll_detail.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ poll.question }}</h2>
+            </div>
+            <div class="card-body">
+                {% if not user.is_authenticated %}
+                    <div class="alert alert-warning">
+                        <p>You must <a href="{% url 'login' %}">login</a> to vote in this poll.</p>
+                    </div>
+                {% elif user_voted %}
+                    <div class="alert alert-info">
+                        <p>You have already voted in this poll. <a href="{% url 'poll_results' poll.id %}">View results</a></p>
+                    </div>
+                {% else %}
+                    <form method="post" action="{% url 'vote' poll.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {% for choice in poll.choices.all %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="choice" 
+                                           value="{{ choice.id }}" id="choice{{ choice.id }}">
+                                    <label class="form-check-label" for="choice{{ choice.id }}">
+                                        {{ choice.text }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Vote</button>
+                    </form>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{% url 'poll_list' %}" class="btn btn-secondary">Back to Polls</a>
+                    <a href="{% url 'poll_results' poll.id %}" class="btn btn-outline-primary">View Results</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

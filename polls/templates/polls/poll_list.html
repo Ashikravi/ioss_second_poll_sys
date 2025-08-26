@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Active Polls</h1>
+    {% if user.is_staff %}
+        <a href="/admin/polls/poll/add/" class="btn btn-success">Create New Poll</a>
+    {% endif %}
+</div>
+
+{% if polls %}
+    <div class="row">
+        {% for poll in polls %}
+            <div class="col-md-6 mb-4">
+                <div class="card poll-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ poll.question }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Created: {{ poll.created_at|date:"M d, Y" }}
+                                {% if poll.expires_at %}
+                                    | Expires: {{ poll.expires_at|date:"M d, Y H:i" }}
+                                {% endif %}
+                            </small>
+                        </p>
+                        <p class="card-text">Total votes: {{ poll.total_votes }}</p>
+                        
+                        {% if poll.is_expired %}
+                            <span class="badge bg-danger">Expired</span>
+                            <a href="{% url 'poll_results' poll.id %}" class="btn btn-secondary">View Results</a>
+                        {% else %}
+                            <a href="{% url 'poll_detail' poll.id %}" class="btn btn-primary">Vote Now</a>
+                            <a href="{% url 'poll_results' poll.id %}" class="btn btn-outline-primary">View Results</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center">
+        <h3>No active polls available</h3>
+        <p>Check back later for new polls!</p>
+    </div>
+{% endif %}
+{% endblock %}

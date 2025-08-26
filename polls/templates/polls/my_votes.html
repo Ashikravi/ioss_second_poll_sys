@@ -1,0 +1,38 @@
+<!-- templates/polls/my_votes.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>My Votes</h1>
+
+{% if votes %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Poll Question</th>
+                    <th>My Choice</th>
+                    <th>Voted At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vote in votes %}
+                    <tr>
+                        <td>{{ vote.choice.poll.question }}</td>
+                        <td><strong>{{ vote.choice.text }}</strong></td>
+                        <td>{{ vote.voted_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'poll_results' vote.choice.poll.id %}" class="btn btn-sm btn-outline-primary">View Results</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="text-center">
+        <h3>No votes yet</h3>
+        <p><a href="{% url 'poll_list' %}">Browse polls</a> to start voting!</p>
+    </div>
+{% endif %}
+{% endblock %}
